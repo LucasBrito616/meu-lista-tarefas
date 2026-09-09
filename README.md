@@ -173,3 +173,53 @@ O uso do TypeScript ajuda a manter uma estrutura mais organizada e reduz possív
 
 ---
 
+6. Configuração do banco de dados SQLite
+
+Para persistir as tarefas localmente, foi utilizado o módulo `expo-sqlite`.
+
+Foi criada a pasta:
+
+```
+src/database/
+
+```
+
+Arquivo `database.ts`
+Esse arquivo é responsável por gerenciar a conexão com o banco de dados. Ele implementa um padrão Singleton, garantindo que apenas uma conexão seja aberta durante a execução do aplicativo. Na primeira chamada, o banco é criado (caso não exista) e a tabela `tasks` é inicializada automaticamente.
+
+Também foi habilitado o modo `WAL` (Write-Ahead Log), que melhora a performance de escrita do SQLite. Em vez de gravar diretamente no arquivo, o banco utiliza um log intermediário, reduzindo o tempo de travamento durante operações de escrita.
+
+7. Criação do repositório de tarefas
+
+Arquivo `src/database/taskRepository.ts`
+
+Esse arquivo concentra todas as operações de CRUD (Create, Read, Update, Delete) relacionadas às tarefas, entre elas:
+
+* Buscar todas as tarefas (da mais recente para a mais antiga);
+* Buscar uma tarefa específica por ID;
+* Criar uma nova tarefa;
+* Atualizar título e descrição de uma tarefa existente;
+* Alternar o status de conclusão de uma tarefa;
+* Excluir uma tarefa.
+
+Por que separar conexão e operações em arquivos diferentes?
+O arquivo `database.ts` cuida apenas da conexão com o banco (abrir e criar tabelas), enquanto o `taskRepository.ts` cuida das operações sobre os dados. Essa divisão segue o princípio de Responsabilidade Única (SRP), tornando o código mais organizado e fácil de manter.
+
+8. Criação do hook customizado
+
+Arquivo `src/hooks/useTasks.ts`
+
+Foi desenvolvido um hook customizado para centralizar toda a lógica de estado e manipulação das tarefas, evitando que essa lógica fique espalhada pelos componentes de tela. Entre as responsabilidades do hook estão:
+
+* Carregar as tarefas do banco de dados;
+* Recarregar a lista automaticamente sempre que a tela voltar a ficar em foco (por exemplo, ao retornar do formulário de cadastro);
+* Aplicar filtros (todas, pendentes ou concluídas);
+* Alternar o status de conclusão de uma tarefa;
+* Remover uma tarefa;
+* Fornecer contadores de tarefas totais, pendentes e concluídas.
+
+Por que usar `useCallback`?
+Sem o `useCallback`, a função de carregamento das tarefas seria recriada a cada renderização do componente. Isso geraria um loop infinito em conjunto com o `useFocusEffect`, já que o efeito identificaria a mudança de referência da função e a executaria novamente, causando nova renderização — e assim sucessivamente. O `useCallback` mantém a mesma referência da função entre renderizações, evitando esse problema.
+
+🚧 Status atualizado do projeto: Desenvolvimento concluído até a Etapa 8, com banco de dados local, camada de repositório e hook de gerenciamento de estado das tarefas já implementados.
+
