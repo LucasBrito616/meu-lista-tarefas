@@ -11,7 +11,6 @@ export function useTasks() {
   // Carrega todas as tarefas do banco
   const loadTasks = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await TaskRepository.getTasks();
       setTasks(data);
     } catch (error) {
@@ -21,22 +20,22 @@ export function useTasks() {
     }
   }, []);
 
-  // Recarrega sempre que a tela ganhar foco (ao voltar do formulário)
-  // O callback do useFocusEffect precisa ser síncrono, por isso
-  // envolvemos a chamada de loadTasks (async) em uma função síncrona.
+  // Recarrega sempre que a tela ganhar foco (ex.: ao voltar do formulário).
+  // O callback não pode retornar Promise, por isso o wrapper com chaves.
   useFocusEffect(
     useCallback(() => {
       loadTasks();
     }, [loadTasks]),
   );
 
-  // Filtra as tarefas no frontend conforme o filtro ativo
+  // Filtra no frontend conforme o filtro ativo
   const filteredTasks = tasks.filter((task) => {
     if (filter === 'pending') return task.completed === 0;
     if (filter === 'completed') return task.completed === 1;
     return true;
   });
 
+  // Alterna entre pendente (0) e concluída (1)
   const toggleTask = useCallback(
     async (id: number, currentCompleted: number) => {
       const newCompleted = currentCompleted === 0 ? 1 : 0;
@@ -46,6 +45,7 @@ export function useTasks() {
     [loadTasks],
   );
 
+  // Remove a tarefa e recarrega a lista
   const removeTask = useCallback(
     async (id: number) => {
       await TaskRepository.deleteTask(id);
